@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWEET | Global Brand Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sweet-pink: #ffafbd;
+            --sweet-orange: #ffc3a0;
+            --glass: rgba(255, 255, 255, 0.85);
+            --dark: #1a1a1a;
+            --shadow: 0 20px 50px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        /* نافذة التحكم العلوية */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.6rem; font-weight: 800;
+            background: linear-gradient(to right, #ee9ca7, #ffdde1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        select#langPicker {
+            padding: 8px 15px; border-radius: 50px; border: 1px solid #ddd;
+            background: white; cursor: pointer; font-size: 0.9rem;
+        }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+
+        /* منطقة الإضافة */
+        .add-section {
+            background: var(--glass);
+            padding: 30px; border-radius: 30px;
+            box-shadow: var(--shadow); margin-bottom: 40px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px; align-items: end;
+        }
+
+        input, .file-input-wrapper {
+            width: 100%; padding: 15px; border-radius: 15px;
+            border: 1px solid rgba(0,0,0,0.05); background: white; outline: none;
+        }
+
+        .file-input-wrapper { position: relative; overflow: hidden; cursor: pointer; text-align: center; }
+        .file-input-wrapper input { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+
+        .btn-publish {
+            background: var(--dark); color: white; padding: 15px;
+            border-radius: 15px; border: none; font-weight: 700; cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-publish:hover { transform: scale(1.02); background: #000; }
+
+        /* شبكة المنتجات */
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background: white; border-radius: 25px; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.02); transition: 0.3s;
+            position: relative;
+        }
+
+        .product-card:hover { transform: translateY(-10px); box-shadow: var(--shadow); }
+
+        .prod-img { width: 100%; height: 250px; object-fit: cover; background: #eee; }
+
+        .prod-info { padding: 20px; }
+        .prod-info h3 { margin-bottom: 10px; font-size: 1.2rem; }
+        
+        .badge-stock {
+            padding: 5px 12px; background: #f0f0f0; border-radius: 50px;
+            font-size: 0.8rem; font-weight: 600;
+        }
+
+        .price-text { font-size: 1.3rem; font-weight: 800; color: #ff8a80; }
+
+        .delete-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.8); border: none; width: 35px; height: 35px;
+            border-radius: 50%; color: red; cursor: pointer; font-weight: bold;
+        }
+
+        /* نظام التنبيه */
+        #autoSaveToast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--dark); color: white; padding: 12px 25px;
+            border-radius: 50px; font-size: 0.8rem; display: none; z-index: 2000;
+        }
+
+        [dir="ltr"] .price-text::before { content: '$ '; }
+        [dir="rtl"] .price-text::after { content: ' $'; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">SWEET.</div>
+        <select id="langPicker" onchange="updateLanguage()">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="tr">Türkçe</option>
+            <option value="zh">中文</option>
+        </select>
+    </header>
+
+    <div class="container">
+        <div class="add-section">
+            <input type="text" id="pName" data-i18n="placeholder-name">
+            <input type="number" id="pPrice" data-i18n="placeholder-price">
+            <input type="number" id="pStock" data-i18n="placeholder-stock">
+            <div class="file-input-wrapper">
+                <span id="uploadLabel" data-i18n="upload">رفع صورة</span>
+                <input type="file" id="pImage" accept="image/*">
+            </div>
+            <button class="btn-publish" onclick="publishProduct()" data-i18n="btn-publish">نشر المنتج</button>
+        </div>
+
+        <div class="grid" id="productGrid"></div>
+    </div>
+
+    <div id="autoSaveToast" data-i18n="autosave">تم الحفظ تلقائياً ✅</div>
+
+    <script>
+        // مصفوفة اللغات
+        const langLib = {
+            ar: { "placeholder-name": "اسم المنتج", "placeholder-price": "السعر", "placeholder-stock": "الكمية", "upload": "رفع صورة", "btn-publish": "نشر المنتج", "autosave": "تم الحفظ تلقائياً ✅", "stock-label": "المخزون", dir: "rtl" },
+            en: { "placeholder-name": "Product Name", "placeholder-price": "Price", "placeholder-stock": "Stock", "upload": "Upload Image", "btn-publish": "Publish", "autosave": "Autosaved ✅", "stock-label": "Stock", dir: "ltr" },
+            fr: { "placeholder-name": "Nom du produit", "placeholder-price": "Prix", "placeholder-stock": "Stock", "upload": "Image", "btn-publish": "Publier", "autosave": "Enregistré ✅", "stock-label": "Stock", dir: "ltr" },
+            es: { "placeholder-name": "Nombre", "placeholder-price": "Precio", "placeholder-stock": "Existencias", "upload": "Subir imagen", "btn-publish": "Publicar", "autosave": "Guardado ✅", "stock-label": "Stock", dir: "ltr" },
+            tr: { "placeholder-name": "Ürün Adı", "placeholder-price": "Fiyat", "placeholder-stock": "Stok", "upload": "Resim Yükle", "btn-publish": "Yayınla", "autosave": "Kaydedildi ✅", "stock-label": "Stok", dir: "ltr" },
+            zh: { "placeholder-name": "产品名称", "placeholder-price": "价格", "placeholder-stock": "库存", "upload": "上传图片", "btn-publish": "发布", "autosave": "自动保存 ✅", "stock-label": "库存", dir: "ltr" }
+        };
+
+        let products = JSON.parse(localStorage.getItem('sweet_global_db')) || [];
+        let currentImgBase64 = "";
+
+        // معالجة الصورة
+        document.getElementById('pImage').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                currentImgBase64 = reader.result;
+                document.getElementById('uploadLabel').innerText = "✅ OK";
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        function updateLanguage() {
+            const lang = document.getElementById('langPicker').value;
+            const t = langLib[lang];
+            
+            document.getElementById('htmlTag').dir = t.dir;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(el.tagName === 'INPUT') el.placeholder = t[key];
+                else el.innerText = t[key];
+            });
+            render();
+        }
+
+        function publishProduct() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const stock = document.getElementById('pStock').value;
+
+            if(name && price && stock) {
+                products.push({ id: Date.now(), name, price, stock, img: currentImgBase64 });
+                sync();
+                clear();
+            }
+        }
+
+        function sync() {
+            localStorage.setItem('sweet_global_db', JSON.stringify(products));
+            render();
+            showToast();
+        }
+
+        function render() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            const lang = document.getElementById('langPicker').value;
+            const stockText = langLib[lang]["stock-label"];
+
+            products.forEach(p => {
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <button class="delete-btn" onclick="remove(${p.id})">✕</button>
+                        <img src="${p.img || 'https://via.placeholder.com/300'}" class="prod-img">
+                        <div class="prod-info">
+                            <div class="price-text">${p.price}</div>
+                            <h3>${p.name}</h3>
+                            <span class="badge-stock">📦 ${stockText}: ${p.stock}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function remove(id) {
+            products = products.filter(x => x.id !== id);
+            sync();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('autoSaveToast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 2000);
+        }
+
+        function clear() {
+            document.getElementById('pName').value = '';
+            document.getElementById('pPrice').value = '';
+            document.getElementById('pStock').value = '';
+            document.getElementById('uploadLabel').innerText = langLib[document.getElementById('langPicker').value].upload;
+            currentImgBase64 = '';
+        }
+
+        // تشغيل أولي
+        updateLanguage();
+    </script>
+</body>
+</html>
